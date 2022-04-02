@@ -50,3 +50,21 @@ Enclose the doc contents in <p>...</p>
 Use <br /> for line breaks
 Use <strong>...</strong> for bold
 Use <em>..</em> for italics
+
+    Client
+        Quill & unique url
+        |
+    communicates with HTTP Event Stream
+         onChange => send OP lists [POST]
+         listens to updates from other clients [Event Stream]
+        |
+    Main Gateway Server
+        POST / GET / Event Stream Handlers
+        Websocket with ShareDB
+        |
+    communicates with Websocket
+        |
+
+    ShareDB Server
+        |
+    MongoDB Server
