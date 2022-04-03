@@ -52,6 +52,7 @@ Use <strong>...</strong> for bold
 Use <em>..</em> for italics
 
     Client
+
         Quill & unique url
         |
     communicates with HTTP Event Stream

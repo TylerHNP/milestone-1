@@ -39,8 +39,7 @@ function TextEditor() {
                     'Content-Type': 'application/json'
                 },
             });
-            document.json().then(d => console.log("connected to a doc...", (d.content)))
-            quill.setContents(document.content)
+            document.json().then(d => console.log("connected to a doc...", (quill.setContents(d))))
             quill.enable()
         }
         fetchData();
@@ -69,8 +68,8 @@ function TextEditor() {
     //submiting my doc updates
     useEffect(() => {
         if (quill == null) return
-
         const handler = async (delta, oldDelta, source) => {
+
             if (source !== "user") return
             console.log(delta)
             // socket.emit("send-changes", delta)
@@ -80,7 +79,9 @@ function TextEditor() {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ delta })
+
+                //check piazza data type...
+                body: JSON.stringify({ data: delta, content: quill.getContents() })
             });
             console.log(rawResponse.status)
         }
@@ -118,9 +119,8 @@ export default TextEditor;
 // Sharedb.types.register(richText.type);
 
 // // Connecting to our socket server
-// // const socket = new WebSocket('ws://localhost:5001');
-// const events = new EventSource('http://localhost:5001/events');
-// const connection = new Sharedb.Connection(events);
+// const socket = new WebSocket('ws://localhost:5001');
+// const connection = new Sharedb.Connection(socket);
 
 // // Querying for our document
 
@@ -132,10 +132,10 @@ export default TextEditor;
 //     const [events, setEvents] = useState([])
 
 //     const [listening, setListening] = useState(false);
-//     const doc = connection.get('documents', documentId);
+    // const doc = connection.get('documents', documentId);
 
 //     useEffect(() => {
-//         doc.subscribe(function (err) {
+        // doc.subscribe(function (err) {
 //             if (err) throw err;
 
 //             const toolbarOptions = ['bold', 'italic', 'underline', 'strike', 'align'];
@@ -145,7 +145,7 @@ export default TextEditor;
 //                     toolbar: toolbarOptions,
 //                 },
 //             };
-//             let quill = new Quill('#editor', options);
+            // let quill = new Quill('#editor', options);
 //             /**
 //              * On Initialising if data is present in server
 //              * Updtaing its content to editor

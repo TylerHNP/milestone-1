@@ -90,10 +90,18 @@ async function updateOps(request, response) {
     // Handle list of Ops Events
     // right now, it only handles one at a time. the grading scripts expect an array of it.
     const connectionId = request.params.connectionId
-    sendOpEventsToAll(connectionId, request.body.delta.ops);
-    const document = await Document.findById(ONE_DOC_ID)
+    sendOpEventsToAll(connectionId, request.body.data.ops);
 
-    const a = await Document.findByIdAndUpdate(ONE_DOC_ID, { content: [document.content] + [request.body.delta.ops] }, { new: true })
+
+
+    // [
+    //     [{ insert: 'a' }], [{ retain: 1 }, { insert: 'b' }], [{ retain: 2 }, { insert: 'c' }]
+    // ]
+
+    const content = request.body.content.ops
+    const update = await Document.findByIdAndUpdate(ONE_DOC_ID, { content })
+
+
     response.end()
 }
 app.post('/op/:connectionId', updateOps);
@@ -103,29 +111,17 @@ app.post('/op/:connectionId', updateOps);
 async function getDoc(request, response) {
     const connectionId = request.params.connectionId
     const document = await findOrCreateDocument(ONE_DOC_ID)
-    response.json(document)
+    response.json(document.content)
 }
 app.get('/getDoc/:connectionId', getDoc);
 
 
 async function findOrCreateDocument(ONE_DOC_ID) {
-
-    // const document = await Document.count({}, async function (err, count) {
-    //     if (count == 0) {
-    //         console.log("0")
-    //         return await Document.create({ _id: 0, content: "" })
-    //     } else if (count == 1) {
-    //         console.log("1")
-    //         return await Document.find().limit(1)
-    //     }
-    // })
-
     const document = await Document.findById(ONE_DOC_ID)
     console.log('found existing doc to load... doc_id:', ONE_DOC_ID)
     if (document) return document
     console.log('new doc creating.. doc_id:', ONE_DOC_ID)
     return await Document.create({ _id: ONE_DOC_ID, content: [] })
-
 }
 
 if (PRODUCTION_MODE) {
