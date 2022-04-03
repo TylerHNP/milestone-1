@@ -26,7 +26,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors())
 
-const authRoutes = require("./routes/routes")
+const authRoutes = require("./routes/routes");
+const { response } = require('express');
 
 app.use(authRoutes)
 
@@ -42,7 +43,6 @@ app.use(authRoutes)
 
 
 let clients = [];
-let facts = [];
 
 function eventsHandler(request, response, next) {
     const headers = {
@@ -52,11 +52,7 @@ function eventsHandler(request, response, next) {
     };
     response.writeHead(200, headers);
 
-    const data = `data: ${JSON.stringify(facts)}\n\n`;
-
-    response.write(data);
-
-    const clientId = Date.now();
+    const clientId = request.params.connectionId
 
     const newClient = {
         id: clientId,
@@ -73,48 +69,42 @@ function eventsHandler(request, response, next) {
     });
 }
 
-app.get('/events', eventsHandler);
+app.get('/connect/:connectionId', eventsHandler);
 
 
-
-// function sendEventsToAll(newFact) {
-//     clients.forEach(client => client.response.write(`data: ${JSON.stringify(newFact)}\n\n`))
-// }
-
-// async function addFact(request, respsonse, next) {
-//     const newFact = request.body;
-//     facts.push(newFact);
-//     respsonse.json(newFact)
-//     console.log(newFact)
-//     return sendEventsToAll(newFact);
-// }
-
-// app.post('/fact', addFact);
-
-
-
-function sendOpEventsToAll(delta) {
+function sendOpEventsToAll(connectionId, delta) {
     try {
-        clients.forEach(client => client.response.write(`data: ${JSON.stringify(delta)}\n\n`))
+        clients.forEach(client => {
+            if (client.id != connectionId) {
+                client.response.write(`data: ${JSON.stringify(delta)}\n\n`)
+            }
+        }
+        )
     } catch (e) {
         console.log(e)
     }
-
 }
 
 async function updateOps(request, respsonse) {
-    let connectionId = request.params.id
-    console.log(connectionId, ": ", request.body.delta.ops)
-
-    return sendOpEventsToAll(request.body.delta.ops);
+    const connectionId = request.params.connectionId
+    sendOpEventsToAll(connectionId, request.body.delta.ops);
+    respsonse.end()
 }
-app.post('/op/:id', updateOps);
+app.post('/op/:connectionId', updateOps);
 
+
+
+async function getDoc(request, respsonse) {
+
+
+    response.send(document)
+}
+app.post('/op/:connectionId', updateOps);
 
 
 if (PRODUCTION_MODE) {
     app.listen(PORT, IP, () => console.log(`CSE356 Milestone 1: listening on port ${PORT}`))
 } else {
-    app.listen(PORT, () => console.log(`CSE356 Milestone 1: listening on port${PORT}`))
+    app.listen(PORT, () => console.log(`CSE356 Milestone 1: listening on port ${PORT}`))
 }
 

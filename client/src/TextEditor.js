@@ -1,45 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import 'react-quill/dist/quill.snow.css';
-import { useParams } from "react-router-dom"
 import Quill from "quill"
 import "quill/dist/quill.snow.css"
-
-
-
-// var ReconnectingWebSocket = require('reconnecting-websocket')
-// var Connection = require('sharedb/lib/client').Connection
-// const Client = require('sharedb/lib/client')
-
-// Client.types.register(richText.type)
-// var socket = new ReconnectingWebSocket('ws://localhost:5001')
-// var connection = new Connection(socket)
-
-// var doc = connection.get('doc-collection', 'doc-id')
-
+import { v4 as uuidV4 } from "uuid"
+const connectionId = uuidV4()
 
 
 function TextEditor() {
-    const { id: documentId } = useParams()
-
     const [quill, setQuill] = useState()
     const [listening, setListening] = useState(false);
-
-
-    const handleOP = async (delta) => {
-
-        const rawResponse = await fetch(`http://localhost:5001/op/${documentId}`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ delta })
-        });
-        const content = await rawResponse.json();
-        console.log('what is returned from server is...', content);
-
-    }
 
 
     const wrapperRef = useCallback(wrapper => {
@@ -52,44 +21,65 @@ function TextEditor() {
             theme: "snow",
             modules: { toolbar: ['bold', 'italic', 'underline', 'strike', 'align'] },
         })
+        // q.disable()
         setQuill(q)
     }, [])
 
+    // once connected, check for existing doc and retreive
+    useEffect(() => {
+        if (quill == null) return
 
+        // socket.once("load-document", document => {
+        // quill.setContents(document)
+        // quill.enable()
+        // })
 
+        // socket.emit("get-document", connectionId)
+    }, [quill, connectionId])
+
+    //receiving updates from server
     useEffect(() => {
         if (quill == null) return
         if (!listening) {
-            const events = new EventSource('http://localhost:5001/events');
+            const events = new EventSource(`http://localhost:5001/connect/${connectionId}`);
             events.onmessage = (event) => {
                 const updatedDelta = JSON.parse(event.data);
                 console.log(updatedDelta)
-
-                // setTestData((value) => value.concat(parsedData));
                 quill.updateContents(updatedDelta)
             };
             setListening(true);
         }
 
+
     }, [listening, quill])
 
 
 
+
+    //submiting my doc updates
     useEffect(() => {
         if (quill == null) return
 
-        const handler = (delta, oldDelta, source) => {
+        const handler = async (delta, oldDelta, source) => {
             if (source !== "user") return
             console.log(delta)
             // socket.emit("send-changes", delta)
-            handleOP(delta)
+            const rawResponse = await fetch(`http://localhost:5001/op/${connectionId}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ delta })
+            });
+            console.log(rawResponse.status)
         }
         quill.on("text-change", handler)
         return () => {
             quill.off("text-change", handler)
         }
 
-    }, [quill])
+    }, [quill, connectionId])
 
     return (
         <div>
