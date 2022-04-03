@@ -8,6 +8,7 @@ const connectionId = uuidV4()
 
 function TextEditor() {
     const [quill, setQuill] = useState()
+    const [quillLoaded, setQuillLoaded] = useState(false)
     const [listening, setListening] = useState(false);
 
 
@@ -21,21 +22,30 @@ function TextEditor() {
             theme: "snow",
             modules: { toolbar: ['bold', 'italic', 'underline', 'strike', 'align'] },
         })
-        // q.disable()
         setQuill(q)
+        setQuillLoaded(true)
     }, [])
 
     // once connected, check for existing doc and retreive
     useEffect(() => {
+
         if (quill == null) return
+        async function fetchData() {
 
-        // socket.once("load-document", document => {
-        // quill.setContents(document)
-        // quill.enable()
-        // })
+            const document = await fetch(`http://localhost:5001/getDoc/${connectionId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+            });
+            document.json().then(d => console.log("connected to a doc...", (d.content)))
+            quill.setContents(document.content)
+            quill.enable()
+        }
+        fetchData();
 
-        // socket.emit("get-document", connectionId)
-    }, [quill, connectionId])
+    }, [quillLoaded])
 
     //receiving updates from server
     useEffect(() => {
@@ -79,7 +89,7 @@ function TextEditor() {
             quill.off("text-change", handler)
         }
 
-    }, [quill, connectionId])
+    }, [quill])
 
     return (
         <div>
