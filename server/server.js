@@ -4,6 +4,7 @@ const WebSocketJSONStream = require('@teamwork/websocket-json-stream')
 
 const express = require('express')
 const ShareDB = require('sharedb');
+
 const cors = require('cors')
 
 const app = express()
@@ -18,9 +19,6 @@ const Document = require('./models/Document')
 require("./db/connectDB")
 var http = require('http');
 
-// ShareDB.types.register(richText.type);
-// const shareDBServer = new ShareDB();
-// const connection = shareDBServer.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -30,20 +28,31 @@ const authRoutes = require("./routes/routes");
 
 app.use(authRoutes)
 
-// var server = http.createServer(app)
-// var webSocketServer = new WebSocket.Server({ server: server })
 
-// var backend = new ShareDB()
-// webSocketServer.on('connection', (webSocket) => {
-//     var stream = new WebSocketJSONStream(webSocket)
-//     backend.listen(stream)
-// })
-// const doc = connection.get('documents', 'firstDocument');
+
+
+ShareDB.types.register(require('rich-text').type);
+const shareDBServer = new ShareDB();
+const connection = shareDBServer.connect();
+const doc = connection.get('documents', 'firstDocument');
+
+
+// // Connecting to our socket server
+
+
+// doc.on('op', function (op, source) {
+//     if (source === quill) return;
+//     quill.updateContents(op);
+// });
+
 
 const ONE_DOC_ID = 0
 let clients = [];
 
-function eventsHandler(request, response, next) {
+
+//EVENT STREAM
+async function eventsHandler(request, response, next) {
+
     const headers = {
         'Content-Type': 'text/event-stream',
         'Connection': 'keep-alive',
@@ -60,8 +69,25 @@ function eventsHandler(request, response, next) {
     console.log(`New ${clientId} Connection Opened`);
 
 
-    clients.push(newClient);
+    let exist = false
+    for (let i = 0; i < clients.length; i++) {
+        console.log("@@@@", clients[i].id, clientId)
+        if (clients[i].id == clientId) {
+            exist = true
+        }
+    }
+    if (!exist) {
+        // send stuff...
+        console.log("FUUK")
+        const document = await findOrCreateDocument(ONE_DOC_ID)
+        response.write(`data: ${JSON.stringify(document)}\n\n`)
+    }
 
+    clients.push(newClient);
+    console.log("Currently Connected Users: ", clients.length)
+
+
+    // {data: {content: oplist}}
     request.on('close', () => {
         console.log(`${clientId} Connection closed`);
         clients = clients.filter(client => client.id !== clientId);
@@ -109,7 +135,6 @@ app.post('/op/:connectionId', updateOps);
 
 
 async function getDoc(request, response) {
-    const connectionId = request.params.connectionId
     const document = await findOrCreateDocument(ONE_DOC_ID)
     response.json(document.content)
 }
