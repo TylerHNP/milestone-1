@@ -6,6 +6,8 @@ import { v4 as uuidV4 } from "uuid"
 const connectionId = uuidV4()
 
 
+
+
 function TextEditor() {
     const [quill, setQuill] = useState()
     const [quillLoaded, setQuillLoaded] = useState(false)
@@ -71,7 +73,13 @@ function TextEditor() {
                 },
 
                 //check piazza data type...
-                body: JSON.stringify({ data: delta, content: quill.getContents() })
+                body: JSON.stringify([delta.ops])
+
+                // [
+                //     [{'retain': 5}, {'insert': 'a'}],
+                //     [{'retain': 4}, {'delete': 10}], 
+                //     [{'insert': “Hello”, 'attributes': {'bold': true}}] 
+                //     ]
             });
             console.log(rawResponse.status)
         }

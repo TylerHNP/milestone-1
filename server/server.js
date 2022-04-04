@@ -30,10 +30,9 @@ app.use(authRoutes)
 
 
 
-
+const socket = new WebSocket.Server("ws://localhost:5555");
 ShareDB.types.register(require('rich-text').type);
-const shareDBServer = new ShareDB();
-const connection = shareDBServer.connect();
+const shareDBServer = new ShareDB.Connection(socket);
 const doc = connection.get('documents', 'firstDocument');
 
 
@@ -127,18 +126,19 @@ async function updateOps(request, response) {
     // Handle list of Ops Events
     // right now, it only handles one at a time. the grading scripts expect an array of it.
     const connectionId = request.params.connectionId
-    sendOpEventsToAll(connectionId, request.body.data.ops);
+    // console.log("@@@@@@@@@@@@@@@@@@@", request.body)
+    // @@@@@@@@@@@@@@@@@@@ [ [ { retain: 6 }, { insert: 'f' } ] ]
 
-
-
+    for (let i = 0; i < request.body.length; i++) {
+        sendOpEventsToAll(connectionId, request.body[i]);
+    }
     // [
     //     [{ insert: 'a' }], [{ retain: 1 }, { insert: 'b' }], [{ retain: 2 }, { insert: 'c' }]
     // ]
 
-    const content = request.body.content.ops
-    console.log("@@@@@@@@@@@@@@@@@@@", request.body.data.ops) //one oop
-    console.log("#########", content)
-    const update = await Document.findByIdAndUpdate(ONE_DOC_ID, { content })
+    // const content = request.body.content.ops
+    // console.log("#########", content)
+    // const update = await Document.findByIdAndUpdate(ONE_DOC_ID, { content })
 
     response.end()
 }
