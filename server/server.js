@@ -41,9 +41,13 @@ ShareDB.types.register(require('rich-text').type);
 const socket = new WebSocket(websocketServer);
 const connection = new ShareDB.Connection(socket)
 const doc = connection.get('documents', 'firstDocument');
-console.log("checking docs", doc);
 doc.subscribe(function (err) {
     if (err) throw err;
+    doc.on('op', function (delta, source) {
+        console.log("op changes happens", source);
+        console.log(delta);
+        sendOpEventsToAll(source, delta);
+    });
 });
 
 // // Connecting to our socket server
@@ -95,7 +99,6 @@ async function eventsHandler(request, response, next) {
             const content = { content: document.content }
             console.log(`data: ${JSON.stringify(content)}\n\n`)
             response.write(`data: ${JSON.stringify(content)}\n\n`)
-
             // below is the formatted example sending
             // {
             //     data: {
@@ -138,14 +141,10 @@ async function updateOps(request, response) {
 
     for (let i = 0; i < request.body.length; i++) {
         const content = request.body[i];
-        console.log(content);
-        doc.submitOp(content);
-        console.log("changes");
-        console.log(doc.data);
-        console.log("change end");
 
+        doc.submitOp(content, { source: connectionId });
         // ** PROBABLY NEEDS TO SEND PROCESSED OP from SHAREDB to below...
-        sendOpEventsToAll(connectionId, request.body[i]);
+        // sendOpEventsToAll(connectionId, request.body[i]);
 
     }
     // [
