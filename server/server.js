@@ -30,10 +30,10 @@ app.use(authRoutes)
 
 
 
-const socket = new WebSocket.Server("ws://localhost:5555");
-ShareDB.types.register(require('rich-text').type);
-const shareDBServer = new ShareDB.Connection(socket);
-const doc = connection.get('documents', 'firstDocument');
+// const socket = new WebSocket.Server("ws://localhost:5555");
+// ShareDB.types.register(require('rich-text').type);
+// const shareDBServer = new ShareDB.Connection(socket);
+// const doc = connection.get('documents', 'firstDocument');
 
 
 // // Connecting to our socket server
@@ -122,9 +122,7 @@ function sendOpEventsToAll(connectionId, delta) {
 
 async function updateOps(request, response) {
 
-    //@TODO
-    // Handle list of Ops Events
-    // right now, it only handles one at a time. the grading scripts expect an array of it.
+
     const connectionId = request.params.connectionId
     // console.log("@@@@@@@@@@@@@@@@@@@", request.body)
     // @@@@@@@@@@@@@@@@@@@ [ [ { retain: 6 }, { insert: 'f' } ] ]
@@ -135,6 +133,9 @@ async function updateOps(request, response) {
     // [
     //     [{ insert: 'a' }], [{ retain: 1 }, { insert: 'b' }], [{ retain: 2 }, { insert: 'c' }]
     // ]
+
+    //@TODO
+    // HOW ARE WE GOING TO SAVE IT TO SHAREDB...?
 
     // const content = request.body.content.ops
     // console.log("#########", content)
