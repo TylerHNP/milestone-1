@@ -136,21 +136,14 @@ async function updateOps(request, response) {
     // ]
 
     const content = request.body.content.ops
+    console.log("@@@@@@@@@@@@@@@@@@@", request.body.data.ops) //one oop
+    console.log("#########", content)
     const update = await Document.findByIdAndUpdate(ONE_DOC_ID, { content })
-
 
     response.end()
 }
 app.post('/op/:connectionId', updateOps);
 
-
-
-async function getDoc(request, response) {
-    const document = await findOrCreateDocument(ONE_DOC_ID)
-    response.json(document.content)
-
-}
-app.get('/getDoc/:connectionId', getDoc);
 
 
 async function findOrCreateDocument(ONE_DOC_ID) {

@@ -26,27 +26,9 @@ function TextEditor() {
         setQuillLoaded(true)
     }, [])
 
-    // once connected, check for existing doc and retreive
-    useEffect(() => {
 
-        if (quill == null) return
-        async function fetchData() {
-
-            const document = await fetch(`http://localhost:5001/getDoc/${connectionId}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-            });
-            document.json().then(d => console.log("connected to a doc...", (quill.setContents(d))))
-            quill.enable()
-        }
-        fetchData();
-
-    }, [quillLoaded])
-
-    //receiving updates from server
+    // 1st event stream message udpates our quill, then afterwards listens for 
+    // updates from server
     useEffect(() => {
         if (quill == null) return
         if (!listening) {
@@ -55,8 +37,9 @@ function TextEditor() {
                 const a = JSON.parse(event.data)
 
                 if (a.content) {
-                    console.log("First message sent with content key..", JSON.parse(event.data))
-
+                    console.log("First message sent with content key..", a.content)
+                    console.log("connected to a doc...", (quill.setContents(a.content)))
+                    quill.enable()
                 } else {
                     console.log("Not first time connected anymore / hearing updates...")
                 }
