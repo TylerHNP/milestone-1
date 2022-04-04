@@ -30,12 +30,15 @@ app.use(authRoutes)
 
 
 
-// const socket = new WebSocket.Server("ws://localhost:5555");
-// ShareDB.types.register(require('rich-text').type);
-// const shareDBServer = new ShareDB.Connection(socket);
-// const doc = connection.get('documents', 'firstDocument');
+ShareDB.types.register(require('rich-text').type);
 
-
+const socket = new WebSocket('ws://localhost:5555');
+const connection = new ShareDB.Connection(socket);
+const doc = connection.get('documents', 'firstDocument');
+console.log("checking docs", doc);
+doc.subscribe(function (err) {
+    if (err) throw err;
+});
 // // Connecting to our socket server
 
 
@@ -141,7 +144,21 @@ async function updateOps(request, response) {
     // console.log("#########", content)
     // const update = await Document.findByIdAndUpdate(ONE_DOC_ID, { content })
 
+
+    // ------------- SHAREDB -------------
+
+    // const content = request.body;
+    // console.log(content);
+    // doc.submitOp(content);
+    // console.log("changes");
+    // console.log(doc.data);
+    // console.log("chnage end");
     response.end()
+
+
+
+
+
 }
 app.post('/op/:connectionId', updateOps);
 
