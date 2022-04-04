@@ -52,9 +52,15 @@ function TextEditor() {
         if (!listening) {
             const events = new EventSource(`http://localhost:5001/connect/${connectionId}`);
             events.onmessage = (event) => {
-                console.log("@@@@<", event)
+                const a = JSON.parse(event.data)
+
+                if (a.content) {
+                    console.log("First message sent with content key..", JSON.parse(event.data))
+
+                } else {
+                    console.log("Not first time connected anymore / hearing updates...")
+                }
                 const updatedDelta = JSON.parse(event.data);
-                console.log(updatedDelta)
                 quill.updateContents(updatedDelta)
             };
             setListening(true);

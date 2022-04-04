@@ -53,7 +53,7 @@ Use <em>..</em> for italics
 
     Client
 
-        Quill & unique url
+    Quill & unique url
         |
     communicates with HTTP Event Stream
          onChange => send OP lists [POST]
@@ -66,6 +66,4 @@ Use <em>..</em> for italics
     communicates with Websocket
         |
 
-    ShareDB Server
-        |
-    MongoDB Server
+    ShareDB Server / MongoDB Server

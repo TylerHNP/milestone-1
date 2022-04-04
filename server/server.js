@@ -48,6 +48,7 @@ const doc = connection.get('documents', 'firstDocument');
 
 const ONE_DOC_ID = 0
 let clients = [];
+let count = 0
 
 
 //EVENT STREAM
@@ -69,25 +70,35 @@ async function eventsHandler(request, response, next) {
     console.log(`New ${clientId} Connection Opened`);
 
 
-    let exist = false
-    for (let i = 0; i < clients.length; i++) {
-        console.log("@@@@", clients[i].id, clientId)
-        if (clients[i].id == clientId) {
-            exist = true
-        }
-    }
-    if (!exist) {
-        // send stuff...
-        console.log("FUUK")
-        const document = await findOrCreateDocument(ONE_DOC_ID)
-        response.write(`data: ${JSON.stringify(document)}\n\n`)
-    }
-
     clients.push(newClient);
     console.log("Currently Connected Users: ", clients.length)
+    console.log("USERS: ", clients.map(i => i.id))
 
 
-    // {data: {content: oplist}}
+
+    // Send only once upon starting the connection.
+    // First message event should be emitted after the connection is established with format
+    // `{data: {content: oplist}}` where the ops here must represent the whole operation array 
+    //for the whole document initially.
+    for (let i = 0; i < clients.length; i++) {
+        if (clients[i].id === clientId) {
+            const document = await findOrCreateDocument(ONE_DOC_ID)
+            //`{data: {content: oplist}}`
+            const content = { content: document.content }
+            console.log(`data: ${JSON.stringify(content)}\n\n`)
+            response.write(`data: ${JSON.stringify(content)}\n\n`)
+
+            // below is the formatted example sending
+            // {
+            //     data: {
+            //       content: '[{"insert":"asdfasdfasdfasasdfasdfasdasdfasdfasd\\nasdfasdfasdfasasdfasdfasdasdfasdf\\n"}]'
+            //     }
+            //   }
+
+        }
+    }
+
+
     request.on('close', () => {
         console.log(`${clientId} Connection closed`);
         clients = clients.filter(client => client.id !== clientId);
@@ -137,6 +148,7 @@ app.post('/op/:connectionId', updateOps);
 async function getDoc(request, response) {
     const document = await findOrCreateDocument(ONE_DOC_ID)
     response.json(document.content)
+
 }
 app.get('/getDoc/:connectionId', getDoc);
 
