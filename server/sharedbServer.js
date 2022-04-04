@@ -19,8 +19,6 @@ const connection = shareDBServer.connect();
  */
 const doc = connection.get('documents', 'firstDocument');
 
-doc
-
 doc.fetch(function (err) {
     if (err) throw err;
     if (doc.type === null) {

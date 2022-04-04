@@ -3,7 +3,8 @@ const WebSocket = require('ws')
 const WebSocketJSONStream = require('@teamwork/websocket-json-stream')
 
 const express = require('express')
-const ShareDB = require('sharedb');
+// const ShareDB = require('sharedb');
+var ShareDB = require('sharedb/lib/client');
 
 const cors = require('cors')
 
@@ -33,12 +34,13 @@ app.use(authRoutes)
 ShareDB.types.register(require('rich-text').type);
 
 const socket = new WebSocket('ws://localhost:5555');
-const connection = new ShareDB.Connection(socket);
+const connection = new ShareDB.Connection(socket)
 const doc = connection.get('documents', 'firstDocument');
 console.log("checking docs", doc);
 doc.subscribe(function (err) {
     if (err) throw err;
 });
+
 // // Connecting to our socket server
 
 
@@ -50,7 +52,6 @@ doc.subscribe(function (err) {
 
 const ONE_DOC_ID = 0
 let clients = [];
-let count = 0
 
 
 //EVENT STREAM
