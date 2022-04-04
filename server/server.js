@@ -11,14 +11,19 @@ const cors = require('cors')
 const app = express()
 const bodyParser = require('body-parser');
 
-const PRODUCTION_MODE = false;
+const IS_PRODUCTION_MODE = false;
 const IP = "209.94.59.184"
 
-const PORT = PRODUCTION_MODE ? 80 : 5001;
+const PORT = IS_PRODUCTION_MODE ? 80 : 5001;
+
+
+let websocketServer = 'ws://209.94.59.184:5555'
+if (!IS_PRODUCTION_MODE) {
+    websocketServer = 'ws://localhost:5555'
+}
 
 const Document = require('./models/Document')
 require("./db/connectDB")
-var http = require('http');
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -33,7 +38,7 @@ app.use(authRoutes)
 
 ShareDB.types.register(require('rich-text').type);
 
-const socket = new WebSocket('ws://localhost:5555');
+const socket = new WebSocket(websocketServer);
 const connection = new ShareDB.Connection(socket)
 const doc = connection.get('documents', 'firstDocument');
 console.log("checking docs", doc);
@@ -132,7 +137,16 @@ async function updateOps(request, response) {
     // @@@@@@@@@@@@@@@@@@@ [ [ { retain: 6 }, { insert: 'f' } ] ]
 
     for (let i = 0; i < request.body.length; i++) {
+        const content = request.body[i];
+        console.log(content);
+        doc.submitOp(content);
+        console.log("changes");
+        console.log(doc.data);
+        console.log("change end");
+
+        // ** PROBABLY NEEDS TO SEND PROCESSED OP from SHAREDB to below...
         sendOpEventsToAll(connectionId, request.body[i]);
+
     }
     // [
     //     [{ insert: 'a' }], [{ retain: 1 }, { insert: 'b' }], [{ retain: 2 }, { insert: 'c' }]
@@ -148,12 +162,7 @@ async function updateOps(request, response) {
 
     // ------------- SHAREDB -------------
 
-    // const content = request.body;
-    // console.log(content);
-    // doc.submitOp(content);
-    // console.log("changes");
-    // console.log(doc.data);
-    // console.log("chnage end");
+
     response.end()
 
 
@@ -173,7 +182,7 @@ async function findOrCreateDocument(ONE_DOC_ID) {
     return await Document.create({ _id: ONE_DOC_ID, content: [] })
 }
 
-if (PRODUCTION_MODE) {
+if (IS_PRODUCTION_MODE) {
     app.listen(PORT, IP, () => console.log(`CSE356 Milestone 1: listening on port ${PORT}`))
 } else {
     app.listen(PORT, () => console.log(`CSE356 Milestone 1: listening on port ${PORT}`))

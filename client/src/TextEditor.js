@@ -6,7 +6,14 @@ import { v4 as uuidV4 } from "uuid"
 const connectionId = uuidV4()
 
 
+const IS_PRODUCTION_MODE = false
+// make above true for deploying
 
+let backendURL = "http://localhost:5001"
+
+if (IS_PRODUCTION_MODE) {
+    backendURL = "http://209.94.59.184"
+}
 
 function TextEditor() {
     const [quill, setQuill] = useState()
@@ -34,7 +41,7 @@ function TextEditor() {
     useEffect(() => {
         if (quill == null) return
         if (!listening) {
-            const events = new EventSource(`http://localhost:5001/connect/${connectionId}`);
+            const events = new EventSource(`${backendURL}/connect/${connectionId}`);
             events.onmessage = (event) => {
                 const a = JSON.parse(event.data)
 
@@ -65,7 +72,7 @@ function TextEditor() {
             if (source !== "user") return
             console.log(delta)
             // socket.emit("send-changes", delta)
-            const rawResponse = await fetch(`http://localhost:5001/op/${connectionId}`, {
+            const rawResponse = await fetch(`${backendURL}/op/${connectionId}`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
